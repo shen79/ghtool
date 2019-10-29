@@ -1,0 +1,40 @@
+#!/bin/bash
+
+M="$1"
+shift
+Q=$(echo $* | tr ' ' +)
+
+SN=$(basename $0)
+
+ght_usage() {
+	echo "Usage:
+	search:
+		ght <search|s> <some> [keywords] [...]
+		ghts <keywords>
+	clone:
+		ght <clone|c> <giturl>
+		ghtc <giturl>"
+}
+
+ght_search() {	
+	curl -s "https://api.github.com/search/repositories?sort=stars&order=desc&q=$Q" | jq -r '.items[] | [.name,.owner.login,.clone_url,.description] | @csv ' | sed -e 's/^"//' -e 's/"$//' -e 's/","/,/g' | column -nts,
+}
+
+ght_clone() {	
+	git clone "$Q"
+}
+
+ght_main() {
+	case "$M" in
+		search|s)	ght_search	;;
+		clone|c)	ght_clone	;;
+		*)			ght_usage	;;
+	esac
+}
+
+case $SN in
+	ght)	ght_main ;;
+	ghts)	ght_search ;;
+	ghtc)	ght_clone ;;
+esac
+
